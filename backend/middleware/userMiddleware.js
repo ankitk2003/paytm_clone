@@ -1,5 +1,5 @@
-import config from "../config.js";
-import jwt from "jsonwebtoken"; // Use `import` for ES module
+const config = require("../config.js");
+const jwt = require("jsonwebtoken"); // Use `require` for CommonJS
 
 const { JWT_SECRET } = config;
 
@@ -35,4 +35,4 @@ function userMiddleware(req, res, next) {
   }
 }
 
-export { userMiddleware };
+module.exports = { userMiddleware };
