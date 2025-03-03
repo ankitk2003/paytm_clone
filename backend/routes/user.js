@@ -1,35 +1,34 @@
 const express = require("express");
-const userRouter = express.Router(); // No need to call router()
+const userRouter = express.Router();
 const zod = require("zod");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
-const { User } = require("../db");
+const { User, Account } = require("../db");
+const { userMiddleware } = require("../middleware/userMiddleware"); // FIXED import
 
+// Signup Schema Validation
 const signupSchema = zod.object({
   username: zod.string(),
   password: zod.string(),
   firstname: zod.string(),
-  lastname: zod.string(), // Corrected the duplicate password field
+  lastname: zod.string(),
 });
 
+// Signup Route
 userRouter.post("/signup", async (req, res) => {
-  const body = req.body;
-  const { success, error } = signupSchema.safeParse(req.body); // Fixed to capture error
+  const { success, error } = signupSchema.safeParse(req.body);
+
   if (!success) {
     return res.status(400).json({
-      message: "Invalid input", // Changed to a more appropriate message
-      errors: error.errors, // This will show the specific errors
+      message: "Invalid input",
+      errors: error.errors,
     });
   }
-  
-  const existingUser = await User.findOne({
-    username: req.body.username,
-  });
+
+  const existingUser = await User.findOne({ username: req.body.username });
 
   if (existingUser) {
-    return res.status(411).json({
-      message: "User already exists", // Updated the message
-    });
+    return res.status(411).json({ message: "User already exists" });
   }
 
   const user = await User.create({
@@ -38,20 +37,102 @@ userRouter.post("/signup", async (req, res) => {
     firstname: req.body.firstname,
     lastname: req.body.lastname,
   });
-  
-  const userId = user._id;
-  const token = jwt.sign(
-    {
-      userId,
-    },
-    JWT_SECRET
-  );
 
-  res.json({ message: "User signed up successfully", token }); // Updated the message
+  const token = jwt.sign({ id: user._id }, JWT_SECRET);
+
+  // added the blance when the user siggned up.......
+  await Account.create({
+    userId: user._id,
+    balance: 1 + Math.random() * 10000,
+  });
+
+  return res.json({ message: "User signed up successfully", token });
 });
 
-userRouter.get("/signin", (req, res) => {
-  res.json({ message: "This is the user signin" }); // Kept the same but it's a GET route now
+// Signin Schema Validation
+const signinSchema = zod.object({
+  username: zod.string(),
+  password: zod.string(),
+});
+
+// Signin Route
+userRouter.post("/signin", async (req, res) => {
+  const { success, error } = signinSchema.safeParse(req.body);
+
+  if (!success) {
+    return res.status(400).json({
+      message: "Invalid input",
+      errors: error.errors,
+    });
+  }
+
+  const user = await User.findOne({
+    username: req.body.username,
+    password: req.body.password,
+  });
+
+  if (!user) {
+    return res.status(401).json({ message: "Invalid username or password" });
+  }
+
+  const token = jwt.sign({ id: user._id }, JWT_SECRET);
+
+  return res.json({ message: "User signed in successfully", token });
+});
+
+//body updating schema
+const updateBody = zod.object({
+  password: zod.string(),
+  firstname: zod.string(),
+  lastname: zod.string(),
+});
+
+userRouter.put("/update", userMiddleware, async (req, res) => {
+  try {
+    const { success } = updateBody.safeParse(req.body);
+
+    if (!success) {
+      return res.status(411).json({
+        message: "Error while updating information",
+      });
+    }
+    await User.updateOne({ _id: req.userId }, req.body);
+    return res.json({
+      message: "upadted successfully",
+    });
+  } catch (e) {
+    return res.json({
+      message: "error while upadting",
+      error: e,
+    });
+  }
+});
+
+userRouter.get("/bulk", async (req, res) => {
+  const filter = req.query.filter || "";
+  const users = await User.find({
+    $or: [
+      {
+        firstname: {
+          $regex: filter,
+        },
+      },
+      {
+        lastname: {
+          $regex: filter,
+        },
+      },
+    ],
+  });
+
+  res.json({
+    user: users.map((user) => ({
+      username: user.username,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      _id: user._id,
+    })),
+  });
 });
 
 module.exports = userRouter;
