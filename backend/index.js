@@ -1,8 +1,8 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import userRouter from "./routes/user.js";  // Add .js extension for ES Modules
-import accountRouter from "./routes/account.js"; 
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const userRouter = require("./routes/user"); // No need for .js in CommonJS
+const accountRouter = require("./routes/account");
 
 const app = express();
 app.use(cors());
