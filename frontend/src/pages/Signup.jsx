@@ -23,7 +23,7 @@ const Signup = () => {
         try {
             console.log("Sending Data:", { firstname, lastname, username, password });
 
-            const response = await axios.post("paytm-backend.collabsphere.store/api/v1/user/signup", {
+            const response = await axios.post("http://paytm-backend.collabsphere.store/api/v1/user/signup", {
                 firstname,
                 lastname,
                 username,

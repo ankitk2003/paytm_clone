@@ -16,7 +16,7 @@ export const SendMoney = () => {
         }
         try {
             await axios.post(
-                "http://localhost:3000/api/v1/account/transfer",
+                "http://paytm-backend.collabsphere.store/api/v1/account/transfer",
                 { to: id, amount },
                 {
                     headers: {
