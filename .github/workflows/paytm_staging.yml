@@ -2,7 +2,7 @@ name: Deploy to Staging
 
 on:
   push:
-    branches: [ main ]  # Runs when code is pushed to 'main'
+    branches: [ main ]
 
 jobs:
   redeploy_everything:
@@ -18,24 +18,25 @@ jobs:
           touch /home/runner/.ssh/known_hosts
           echo "${{ secrets.KNOWN_HOSTS }}" > /home/runner/.ssh/known_hosts
 
-          ssh -o StrictHostKeyChecking=no -i ~/ssh_key -t ubuntu@${{ secrets.EC2_HOST }} "
-          cd ~/paytm_clone &&
-          git pull origin main &&
+          ssh -o StrictHostKeyChecking=no -i ~/ssh_key ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          cd ~/paytm_clone || exit 1
+          git pull origin main || exit 1
 
           # Set up Node.js & install global dependencies
-          export PATH=$HOME/.nvm/versions/node/v22.13.1/bin:$PATH &&
-          sudo npm install -g pm2 &&
+          export PATH=$HOME/.nvm/versions/node/v22.13.1/bin:$PATH
+          sudo npm install -g pm2
 
           # --- Deploy Backend ---
-          cd backend &&
-          npm install &&
-          pm2 restart backend || pm2 start server.js --name backend &&
-          pm2 save &&
+          cd backend || exit 1
+          npm install
+          pm2 restart backend || pm2 start server.js --name backend
+          pm2 save
 
           # --- Deploy Frontend ---
-          cd ../frontend &&
-          npm install &&
-          npm run build &&
-          pm2 restart frontend || pm2 start npm --name frontend -- run preview &&
+          cd ../frontend || exit 1
+          npm install
+          npm run build
+          pm2 restart frontend || pm2 start npm --name frontend -- run preview
           pm2 save
-          "
+          exit
+          EOF
