@@ -20,3 +20,5 @@ function App() {
 }
 
 export default App;
+
+// this is a app component
