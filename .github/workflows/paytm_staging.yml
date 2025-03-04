@@ -18,7 +18,7 @@ jobs:
           touch /home/runner/.ssh/known_hosts
           echo "${{ secrets.KNOWN_HOSTS }}" > /home/runner/.ssh/known_hosts
 
-          ssh -o StrictHostKeyChecking=no -i ~/ssh_key ubuntu@${{ secrets.EC2_HOST }} -t "
+          ssh -o StrictHostKeyChecking=no -i ~/ssh_key -t ubuntu@${{ secrets.EC2_HOST }} "
           cd ~/paytm_clone &&
           git pull origin main &&
 
