@@ -1,0 +1,41 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ main ]  # Runs when code is pushed to 'main'
+
+jobs:
+  redeploy_everything:
+    runs-on: ubuntu-latest
+    name: Deploying frontend & backend to EC2
+    steps:
+      - run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/ssh_key
+          chmod 600 ~/ssh_key
+          
+          # Setup SSH
+          mkdir -p /home/runner/.ssh
+          touch /home/runner/.ssh/known_hosts
+          echo "${{ secrets.KNOWN_HOSTS }}" > /home/runner/.ssh/known_hosts
+
+          ssh -o StrictHostKeyChecking=no -i ~/ssh_key ubuntu@${{ secrets.EC2_HOST }} -t "
+          cd ~/paytm_clone &&
+          git pull origin main &&
+
+          # Set up Node.js & install global dependencies
+          export PATH=$HOME/.nvm/versions/node/v22.13.1/bin:$PATH &&
+          sudo npm install -g pm2 &&
+
+          # --- Deploy Backend ---
+          cd backend &&
+          npm install &&
+          pm2 restart backend || pm2 start server.js --name backend &&
+          pm2 save &&
+
+          # --- Deploy Frontend ---
+          cd ../frontend &&
+          npm install &&
+          npm run build &&
+          pm2 restart frontend || pm2 start npm --name frontend -- run preview &&
+          pm2 save
+          "
