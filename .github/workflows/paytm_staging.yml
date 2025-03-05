@@ -37,13 +37,11 @@ jobs:
           echo "Installing backend dependencies..."
           cd backend
           npm ci
-          npm run build
           pm2 restart backend --update-env || pm2 start npm --name backend -- run start
 
           echo "Installing frontend dependencies..."
           cd ../frontend
           npm ci
-          npm run build
           pm2 restart frontend --update-env || pm2 start npm --name frontend -- run dev -- --port 5173
 
           echo "Restarting Nginx..."
