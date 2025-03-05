@@ -26,18 +26,29 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<EOF
+          set -e  # Exit on error
+          echo "Switching to project directory..."
           cd ~/paytm_clone
+
+          echo "Resetting and pulling latest changes..."
+          git reset --hard origin/main
           git pull origin main
-          
+
+          echo "Installing backend dependencies..."
           cd backend
-          npm install
+          npm ci
           npm run build
-          pm2 restart backend || pm2 start npm --name backend -- run start
-          
+          pm2 restart backend --update-env || pm2 start npm --name backend -- run start
+
+          echo "Installing frontend dependencies..."
           cd ../frontend
-          npm install
+          npm ci
           npm run build
-          pm2 restart frontend || pm2 start npm --name frontend -- run dev -- --port 5173
-          
+          pm2 restart frontend --update-env || pm2 start npm --name frontend -- run dev -- --port 5173
+
+          echo "Restarting Nginx..."
           sudo systemctl restart nginx
+          sudo nginx -t && sudo systemctl reload nginx  # Ensure config is valid
+
+          echo "Deployment completed successfully!"
           EOF
