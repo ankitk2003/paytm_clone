@@ -23,7 +23,7 @@ jobs:
 
           cd ~/paytm_clone || exit 1
 
-          # Force update repo
+          # Update Repo
           git fetch --all
           git reset --hard origin/main
           git pull origin main
@@ -35,28 +35,23 @@ jobs:
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           nvm use 22.13.1
-          cd ~
           npm install -g pm2
 
-          # Deploy Backend
-          cd ~/paytm_clone/backend || exit 1
+          # Restart Backend
+          cd backend || exit 1
           npm install --legacy-peer-deps
-          pm2 delete backend || true
-          pm2 start server.js --name backend
+          pm2 restart backend || pm2 start server.js --name backend
           pm2 save
 
-          # Deploy Frontend
-          cd ~/paytm_clone/frontend || exit 1
-          npm install --legacy-peer-deps
-          rm -rf node_modules/.cache
-          npm run build
-
-          pm2 delete frontend || true
-          pm2 start npx --name frontend -- serve -s build -l 3000  # Change to dist/ if using Vite
+          # Restart Frontend (Without Build)
+          cd ../frontend || exit 1
+          pm2 restart frontend || pm2 start npm --name frontend -- run dev -- --host --port 5173
           pm2 save
 
-          # Debug - Show running processes
+          # Restart Nginx
+          sudo systemctl restart nginx
+
+          # Show Running Processes
           pm2 list
-
           exit
           EOF
