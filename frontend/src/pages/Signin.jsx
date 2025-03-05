@@ -9,20 +9,23 @@ import { useNavigate } from "react-router-dom";
 const Signin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   async function handleSignin() {
     console.log({ username, password });
     if (!username || !password) {
       console.error("All fields are required!");
       return;
     }
-  
+
     try {
-      const res = await axios.post("http://paytm-backend.collabsphere.store/api/v1/user/signin", {
-        username,
-        password,
-      });
-  
+      const res = await axios.post(
+        "http://paytm-backend.collabsphere.store/api/v1/user/signin",
+        {
+          username,
+          password,
+        }
+      );
+
       console.log("Response:", res.data);
       localStorage.setItem("token", res.data.token);
       navigate("/dashboard");
@@ -48,12 +51,18 @@ const Signin = () => {
             label={"Email"}
           />
           <InputBox
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="harkirat@gmail.com"
+            label={"Email"}
+          />
+
+          <InputBox
             onChange={(e) => setPassword(e.target.value)}
             placeholder="123456"
             label={"Password"}
           />
           <div className="pt-4">
-            <Button label={"Sign in"} onClick={handleSignin}/>
+            <Button label={"Sign in"} onClick={handleSignin} />
           </div>
           <BottomWarning
             label={"Don't have an account?"}

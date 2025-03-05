@@ -35,22 +35,24 @@ jobs:
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           nvm use 22.13.1
+          cd ~
           npm install -g pm2
 
           # Deploy Backend
-          cd backend || exit 1
+          cd ~/paytm_clone/backend || exit 1
           npm install --legacy-peer-deps
           pm2 delete backend || true
           pm2 start server.js --name backend
           pm2 save
 
           # Deploy Frontend
-          cd ../frontend || exit 1
+          cd ~/paytm_clone/frontend || exit 1
           npm install --legacy-peer-deps
           rm -rf node_modules/.cache
           npm run build
+
           pm2 delete frontend || true
-          pm2 start npm --name frontend -- run preview
+          pm2 start npx --name frontend -- serve -s build -l 3000  # Change to dist/ if using Vite
           pm2 save
 
           # Debug - Show running processes
