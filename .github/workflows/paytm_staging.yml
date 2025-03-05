@@ -9,34 +9,45 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploying frontend & backend to EC2
     steps:
-      - run: |
+      - name: Set up SSH
+        run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/ssh_key
           chmod 600 ~/ssh_key
           
-          # Setup SSH
           mkdir -p /home/runner/.ssh
-          touch /home/runner/.ssh/known_hosts
           echo "${{ secrets.KNOWN_HOSTS }}" > /home/runner/.ssh/known_hosts
 
+      - name: Deploy Application
+        run: |
           ssh -o StrictHostKeyChecking=no -i ~/ssh_key ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          
+          set -e  # Stop on error
+          set -x  # Debugging mode
+
           cd ~/paytm_clone || exit 1
+          git fetch --all
+          git reset --hard origin/main
           git pull origin main || exit 1
 
           # Set up Node.js & install global dependencies
-          export PATH=$HOME/.nvm/versions/node/v22.13.1/bin:$PATH
-          sudo npm install -g pm2
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm use 22.13.1
+          npm install -g pm2
 
           # --- Deploy Backend ---
           cd backend || exit 1
-          npm install
-          pm2 restart backend || pm2 start server.js --name backend
+          npm install --legacy-peer-deps
+          pm2 describe backend && pm2 restart backend || pm2 start server.js --name backend
           pm2 save
 
           # --- Deploy Frontend ---
           cd ../frontend || exit 1
-          npm install
+          npm install --legacy-peer-deps
           npm run build
-          pm2 restart frontend || pm2 start npm --name frontend -- run preview
+          pm2 describe frontend && pm2 restart frontend || pm2 start npm --name frontend -- run preview
           pm2 save
+
+          pm2 list
           exit
           EOF
