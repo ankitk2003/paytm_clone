@@ -8,51 +8,52 @@ jobs:
   redeploy_everything:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up SSH
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/ssh_key
-          chmod 600 ~/ssh_key
-          mkdir -p /home/runner/.ssh
-          echo "${{ secrets.KNOWN_HOSTS }}" > /home/runner/.ssh/known_hosts
-
       - name: Deploy Application
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/ssh_key ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           set -e
-          set -x
-
+          set -x  # Enable command debugging
+          
+          echo "✅ Connected to EC2. Deploying Application..."
+          
           cd ~/paytm_clone || exit 1
-
-          # Force update repo
+          echo "📁 Changed to project directory"
+          
+          echo "🔄 Fetching latest code..."
           git fetch --all
           git reset --hard origin/main
           git pull origin main
-
-          # Debug - Print latest commit hash
-          git log -1
-
-          # Setup Node.js
+          echo "✅ Code updated"
+      
+          git log -1  # Print latest commit hash
+      
+          echo "🛠 Setting up Node.js"
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           nvm use 22.13.1
           npm install -g pm2
-
-          # Restart Backend
+          echo "✅ Node.js ready"
+      
+          echo "🚀 Restarting Backend"
           cd backend || exit 1
           npm install --legacy-peer-deps
           pm2 restart backend || pm2 start server.js --name backend
           pm2 save
-
-          # Restart Frontend (Ensure it runs in Dev Mode)
+          echo "✅ Backend running"
+      
+          echo "🚀 Restarting Frontend"
           cd ../frontend || exit 1
           pm2 delete frontend || true
           pm2 start npm --name frontend -- run dev -- --host --port 5173
           pm2 save
-
-          # Restart Nginx
+          echo "✅ Frontend running"
+      
+          echo "🔄 Restarting Nginx"
           sudo systemctl restart nginx
-
-          # Show Running Processes
-          pm2 list
+          sudo systemctl status nginx --no-pager  # Check status
+      
+          echo "✅ Deployment complete!"
+          pm2 list  # Show running processes
+      
           exit
           EOF
