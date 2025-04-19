@@ -33,3 +33,8 @@ A full-stack web application using Node.js, MongoDB, and Vite. Supports manual s
 - Start the frontend image - docker run -d -p 5173:80 --name paytm-frontend paytm-frontend
 ## you can see the frontend on localhost 5173
    
+## THIS IS DEOPLOYED ON A EC2 ON AWS , BUT IT IS A LEARNER'S AWS ACCOUNT SO IT WORKED UNTIL IT IS LOGGED IN .
+
+project url:http://paytm-clone-frontend.collabsphere.store/signup
+
+
