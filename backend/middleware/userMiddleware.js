@@ -1,5 +1,5 @@
 const config = require("../config.js");
-const jwt = require("jsonwebtoken"); // Use `require` for CommonJS
+const jwt = require("jsonwebtoken"); // Use `require` for CommonJS for ES6 module.....
 
 const { JWT_SECRET } = config;
 
