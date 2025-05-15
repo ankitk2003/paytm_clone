@@ -77,7 +77,7 @@ userRouter.post("/signin", async (req, res) => {
 
   const token = jwt.sign({ id: user._id }, JWT_SECRET);
 
-  return res.json({ message: "User signed in successfully", token });
+  return res.json({ message: "User signed in successfully", token,user });
 });
 
 //body updating schema

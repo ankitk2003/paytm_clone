@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
 
@@ -8,15 +8,17 @@ export const SendMoney = () => {
     const name = searchParams.get("name");
     const [amount, setAmount] = useState(0);
     const [message, setMessage] = useState("");
-
+   const navigate=useNavigate();
     const handleTransfer = async () => {
+        const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
         if (!amount || amount <= 0) {
             setMessage("Please enter a valid amount.");
             return;
         }
         try {
             await axios.post(
-                "http://paytm-backend.collabsphere.store/api/v1/account/transfer",
+                `${baseUrl}/api/v1/account/transfer`,
                 { to: id, amount },
                 {
                     headers: {
@@ -25,6 +27,10 @@ export const SendMoney = () => {
                 }
             );
             setMessage("Transfer successful!");
+            // alert("Transfer successful!");
+            setTimeout(() => {
+                navigate("/dashboard");
+              }, 1000);
         } catch (error) {
             console.log(error)
             setMessage(error.response?.data?.message || "Transfer failed.");

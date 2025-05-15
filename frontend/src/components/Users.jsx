@@ -7,10 +7,11 @@ import { useNavigate } from "react-router-dom";
 export const Users = () => {
     const [users, setUsers] = useState([]);
     const [filter, setFilter] = useState("");
-
+     
     useEffect(() => {
-        axios.get("http://paytm-backend.collabsphere.store/api/v1/user/bulk?filter=" + filter)
-            .then(response => {
+        const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+        axios.get(`${baseUrl}/api/v1/user/bulk?filter=${filter}`)
+        .then(response => {
                 setUsers(response.data.user)
             })
     }, [filter])

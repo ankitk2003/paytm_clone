@@ -11,6 +11,10 @@ const Signin = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   async function handleSignin() {
+
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+
     console.log({ username, password });
     if (!username || !password) {
       console.error("All fields are required!");
@@ -19,7 +23,7 @@ const Signin = () => {
 
     try {
       const res = await axios.post(
-        "http://paytm-backend.collabsphere.store/api/v1/user/signin",
+        `${baseUrl}/api/v1/user/signin`,
         {
           username,
           password,
@@ -28,6 +32,7 @@ const Signin = () => {
 
       console.log("Response:", res.data);
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("firstname",res.data.user.firstname)
       navigate("/dashboard");
     } catch (error) {
       if (error.response && error.response.status === 401) {
